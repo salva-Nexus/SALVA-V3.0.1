@@ -14,4 +14,4 @@ Salva v3 redesigns how trades and liquidity work across the platform to give mer
   Combines both buy and sell prices into a single memory slot, cutting background verification steps in half to save on user network fees.
 
 - **Ultra-Low Network Costs**
-  Built specifically for Layer 2 networks and BNB Chain so every trade executes with sub-cent transaction fees.
+  Built specifically for Layer 2 networks and BNB Chain so every trade executes with sub-cent transaction fees.# SALVA-V3.0.1
