@@ -6,6 +6,7 @@ abstract contract Storage {
     bool public initialized;
 
     uint256 internal constant PRECISION = 10 ** 18;
+    uint256 internal constant ETH_DECIMALS = 18;
 
     // key = keccak256(base ++ quote) -> quote amount per 1 base, scaled to 1e18
     mapping(bytes32 => uint256) public quotePricePerBase;
