@@ -16,7 +16,6 @@ abstract contract SwapEngine is Modifier, View, Events {
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
         _pull(tokenIn, _msgsender(), cacheAmountIn);
         _push(tokenOut, _msgsender(), amountOut);
-        cacheAmountIn = 0;
         emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, amountOut);
     }
 
