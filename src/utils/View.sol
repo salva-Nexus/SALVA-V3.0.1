@@ -26,13 +26,10 @@ abstract contract View is Storage, Errors, TokenGateway {
     {
         uint256 price = _getPrice(tokenOut, tokenIn);
         if (price == 0) revert Pool__Zero_Price();
-
         uint256 decimalsIn = tokenIn == address(0) ? PRECISION : _decimalsOf(tokenIn);
         uint256 decimalsOut = tokenOut == address(0) ? PRECISION : _decimalsOf(tokenOut);
-
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
         uint256 rawAmountOut = PairMath._amountOut(amountIn, PRECISION, price);
-
         return delta == 0
             ? rawAmountOut
             : PairMath._scaleByDelta(decimalsIn, decimalsOut, rawAmountOut, delta);
