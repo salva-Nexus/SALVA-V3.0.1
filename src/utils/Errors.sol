@@ -7,4 +7,5 @@ abstract contract Errors {
     error Pool__Invalid_Rate(uint256 rate);
     error Pool__Zero_Price();
     error Pool__Zero_Amount();
+    error Pool__Amount_Mismatch();
 }

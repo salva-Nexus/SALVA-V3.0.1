@@ -15,7 +15,10 @@ abstract contract SwapEngine is Modifier, View, Events {
         uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
         if (cacheAmountIn == 0) revert Pool__Zero_Amount();
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
-        if (tokenIn != address(0)) _pull(tokenIn, _msgsender(), cacheAmountIn);
+        if (tokenIn != address(0)) {
+            if (msg.value > 0) revert Pool__Amount_Mismatch();
+            _pull(tokenIn, _msgsender(), cacheAmountIn);
+        }
         _push(tokenOut, _msgsender(), amountOut);
         emit Swapped(_msgsender(), tokenIn, tokenOut, cacheAmountIn, amountOut);
     }
