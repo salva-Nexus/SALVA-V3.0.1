@@ -3,9 +3,6 @@ pragma solidity ^0.8.30;
 
 import { SwapEngine } from "./utils/SwapEngine.sol";
 
-// No IERC20/SafeERC20 import needed here either — provideLiquidity
-// and removeLiquidity go through _pull/_push, inherited transitively from
-// TokenGateway via SwapEngine -> View.
 contract Pool is SwapEngine {
     function initialize(address _deployer) external onlyUninitialized {
         deployer = _deployer;
