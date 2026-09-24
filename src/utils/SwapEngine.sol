@@ -9,6 +9,7 @@ abstract contract SwapEngine is Modifier, View, Events {
     function swapExactInput(address tokenIn, address tokenOut, uint256 amountIn)
         external
         payable
+        nonReentrant
         returns (uint256 amountOut)
     {
         uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
@@ -16,7 +17,7 @@ abstract contract SwapEngine is Modifier, View, Events {
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
         _pull(tokenIn, _msgsender(), cacheAmountIn);
         _push(tokenOut, _msgsender(), amountOut);
-        emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, amountOut);
+        emit Swapped(_msgsender(), tokenIn, tokenOut, cacheAmountIn, amountOut);
     }
 
     // /// @notice Swaps a dynamic input amount for an exact output amount
