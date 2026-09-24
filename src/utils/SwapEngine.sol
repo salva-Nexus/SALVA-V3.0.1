@@ -5,8 +5,6 @@ import { Modifier } from "./Modifier.sol";
 import { View } from "./View.sol";
 import { Events } from "./Events.sol";
 
-// No IERC20/SafeERC20 import needed here anymore — transfers go through
-// the _pull/_push helpers inherited (via View) from TokenGateway.
 abstract contract SwapEngine is Modifier, View, Events {
     function swapExactInput(address tokenIn, address tokenOut, uint256 amountIn)
         external

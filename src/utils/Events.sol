@@ -9,9 +9,6 @@ abstract contract Events {
         uint256 amountIn,
         uint256 amountOut
     );
-
-    // Added — Pool.sol already emits both of these, but they were never
-    // declared anywhere in the codebase.
     event LiquidityAdded(address indexed asset, uint256 amount);
     event LiquidityRemoved(address indexed asset, uint256 amount);
     event PriceUpdated(address indexed baseAsset, address indexed quoteAsset, uint256 price);
