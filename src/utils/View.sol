@@ -7,13 +7,10 @@ import { Errors } from "./Errors.sol";
 import { TokenGateway } from "./TokenGateway.sol";
 
 abstract contract View is Storage, Errors, TokenGateway {
-    // _balanceOf / _decimalsOf now come from TokenGateway — no direct
-    // IERC20/IERC20Metadata casts (and no import for either) needed here.
     function availableLiquidity(address asset) external view returns (uint256) {
         return _balanceOf(asset, address(this));
     }
 
-    // Public quote — front-ends / other contracts can call this directly.
     function exactAmountOut(address tokenIn, address tokenOut, uint256 amountIn)
         public
         view
