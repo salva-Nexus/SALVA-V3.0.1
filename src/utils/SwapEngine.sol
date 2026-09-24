@@ -8,13 +8,15 @@ import { Events } from "./Events.sol";
 abstract contract SwapEngine is Modifier, View, Events {
     function swapExactInput(address tokenIn, address tokenOut, uint256 amountIn)
         external
+        payable
         returns (uint256 amountOut)
     {
-        if (amountIn == 0) revert Pool__Zero_Amount();
-        amountOut = _exactAmountOut(tokenIn, tokenOut, amountIn);
-        _pull(tokenIn, _msgsender(), amountIn);
+        uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
+        if (cacheAmountIn == 0) revert Pool__Zero_Amount();
+        amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
+        _pull(tokenIn, _msgsender(), cacheAmountIn);
         _push(tokenOut, _msgsender(), amountOut);
-
+        cacheAmountIn = 0;
         emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, amountOut);
     }
 
