@@ -8,9 +8,6 @@ abstract contract Storage {
     uint256 internal constant PRECISION = 10 ** 18;
     uint256 internal constant ETH_DECIMALS = 18;
 
-    // key = keccak256(base ++ quote) -> quote amount per 1 base, scaled to 1e18
-    mapping(bytes32 => uint256) public quotePricePerBase;
-
     function _keyPair(address _base, address _quote) internal pure returns (bytes32 k) {
         assembly ("memory-safe") {
             mstore(0x00, shl(0x60, _base))
