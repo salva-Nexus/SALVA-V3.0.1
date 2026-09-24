@@ -2,11 +2,13 @@
 pragma solidity ^0.8.30;
 
 library PairMath {
-    uint256 internal constant PRECISION = 1e18;
-
-    function _amountOut(uint256 _amountIn, uint256 _price) internal pure returns (uint256) {
+    function _amountOut(uint256 _amountIn, uint256 _precision, uint256 _price)
+        internal
+        pure
+        returns (uint256)
+    {
         unchecked {
-            return (_amountIn * PRECISION) / _price;
+            return (_amountIn * _precision) / _price;
         }
     }
 

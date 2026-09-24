@@ -34,7 +34,7 @@ abstract contract View is Storage, Errors, TokenGateway {
         uint256 decimalsOut = _decimalsOf(tokenOut);
 
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
-        uint256 rawAmountOut = PairMath._amountOut(amountIn, price);
+        uint256 rawAmountOut = PairMath._amountOut(amountIn, PRECISION, price);
 
         return delta == 0
             ? rawAmountOut
