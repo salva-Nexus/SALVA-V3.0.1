@@ -25,13 +25,37 @@ abstract contract View is Storage, Errors, TokenGateway {
         returns (uint256)
     {
         uint256 price = _getPrice(tokenOut, tokenIn);
-        if (price == 0) revert Pool__Zero_Price();
+        if (price == 0) return 0;
         uint256 decimalsIn = tokenIn == address(0) ? ETH_DECIMALS : _decimalsOf(tokenIn);
         uint256 decimalsOut = tokenOut == address(0) ? ETH_DECIMALS : _decimalsOf(tokenOut);
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
         uint256 rawAmountOut = PairMath._amountOut(amountIn, PRECISION, price);
         return delta == 0
             ? rawAmountOut
-            : PairMath._scaleByDelta(decimalsIn, decimalsOut, rawAmountOut, delta);
+            : PairMath._scaleOutByDelta(decimalsIn, decimalsOut, rawAmountOut, delta);
+    }
+
+    function exactAmountIn(address tokenIn, address tokenOut, uint256 amountOut)
+        public
+        view
+        returns (uint256)
+    {
+        return _exactAmountIn(tokenIn, tokenOut, amountOut);
+    }
+
+    function _exactAmountIn(address tokenIn, address tokenOut, uint256 amountOut)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 price = _getPrice(tokenOut, tokenIn);
+        if (price == 0) return 0;
+        uint256 decimalsIn = tokenIn == address(0) ? ETH_DECIMALS : _decimalsOf(tokenIn);
+        uint256 decimalsOut = tokenOut == address(0) ? ETH_DECIMALS : _decimalsOf(tokenOut);
+        uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
+        uint256 rawAmountIn = PairMath._amountIn(amountOut, PRECISION, price);
+        return delta == 0
+            ? rawAmountIn
+            : PairMath._scaleInByDelta(decimalsIn, decimalsOut, rawAmountIn, delta);
     }
 }

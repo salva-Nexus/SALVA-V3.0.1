@@ -39,10 +39,4 @@ abstract contract Modifier is Context, Storage, Errors {
             revert Pool__Not_Authorized();
         }
     }
-
-    function _checkZeroRate(uint256 exRate) internal pure {
-        if (exRate == 0) {
-            revert Pool__Invalid_Rate(exRate);
-        }
-    }
 }

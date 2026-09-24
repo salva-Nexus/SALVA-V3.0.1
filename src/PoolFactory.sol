@@ -2,11 +2,10 @@
 pragma solidity ^0.8.20;
 
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IPool } from "./interfaces/IPool.sol";
 import { Context } from "./utils/Context.sol";
 
-contract PoolFactory is Ownable, Context {
+contract PoolFactory is Context {
     using Clones for address;
 
     address public baseImplementation;
@@ -19,7 +18,7 @@ contract PoolFactory is Ownable, Context {
     error Factory__Unauthorized();
     error Factory__PoolInitializationFailed();
 
-    constructor(address _multisig, address _baseImplementation) Ownable(_multisig) {
+    constructor(address _multisig, address _baseImplementation) {
         if (_multisig == address(0) || _baseImplementation == address(0)) {
             revert Factory__ZeroAddress();
         }
@@ -34,7 +33,7 @@ contract PoolFactory is Ownable, Context {
         emit BaseImplementationUpdated(_newImplementation);
     }
 
-    function deployPool(address tokenA, address tokenB) external returns (address pool) {
+    function deployPool() external returns (address pool) {
         address impl = baseImplementation;
         if (impl == address(0)) revert Factory__ZeroAddress();
 
