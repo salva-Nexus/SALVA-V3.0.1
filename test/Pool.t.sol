@@ -30,13 +30,14 @@ contract Pool is BaseTest {
     }
 
     function test_SwapExactInput_Success() public _deployInv {
-        uint256 swapAmountUSDC = 100 * 1e6; // 100 USDC
+        uint256 swapAmountUSDC = 100 * 1e6;
         _changePrank(charles);
         uint256 ngnsBefore = ngns.balanceOf(charles);
         uint256 usdcBefore = usdc.balanceOf(charles);
         uint256 expectedOut = pool.exactAmountOut(address(usdc), address(ngns), swapAmountUSDC);
         console2.log("EXPECTED NGNS OUTPUT", expectedOut);
-        uint256 actualOut = pool.swapExactInput(address(usdc), address(ngns), swapAmountUSDC);
+        uint256 actualOut =
+            pool.swapExactInput(address(usdc), address(ngns), swapAmountUSDC, expectedOut);
         assertEq(actualOut, expectedOut);
         assertEq(ngns.balanceOf(charles), ngnsBefore + actualOut);
         assertEq(usdc.balanceOf(charles), usdcBefore - swapAmountUSDC);
@@ -48,7 +49,8 @@ contract Pool is BaseTest {
         uint256 requiredInUSDC = pool.exactAmountIn(address(usdc), address(ngns), requestedOutNGN);
         console2.log("EXPECTED USDC INPUT", requiredInUSDC);
         _changePrank(thelma);
-        uint256 actualIn = pool.swapExactOutput(address(usdc), address(ngns), requestedOutNGN);
+        uint256 actualIn =
+            pool.swapExactOutput(address(usdc), address(ngns), requestedOutNGN, requiredInUSDC);
         assertEq(actualIn, requiredInUSDC);
         _stopPrank();
     }
@@ -56,7 +58,7 @@ contract Pool is BaseTest {
     function test_RevertIf_ZeroAmountSwap() public _deployInv {
         _changePrank(charles);
         vm.expectRevert(Errors.Pool__Zero_Amount.selector);
-        pool.swapExactInput(address(usdc), address(ngns), 0);
+        pool.swapExactInput(address(usdc), address(ngns), 0, 0);
         _stopPrank();
     }
 }

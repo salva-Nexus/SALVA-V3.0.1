@@ -11,4 +11,5 @@ abstract contract Errors {
     error Pool__Stale_Price();
     error Pool__Invalid_Round();
     error Pool__Price_Below_Floor();
+    error Pool__Slippage_Exceeded();
 }

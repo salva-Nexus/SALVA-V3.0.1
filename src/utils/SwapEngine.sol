@@ -23,16 +23,17 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         return (oracle, inv.isInverted);
     }
 
-    function swapExactInput(address tokenIn, address tokenOut, uint256 amountIn)
-        external
-        payable
-        nonReentrant
-        returns (uint256 amountOut)
-    {
+    function swapExactInput(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint256 minAmountOut
+    ) external payable nonReentrant returns (uint256 amountOut) {
         uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
         if (cacheAmountIn == 0) revert Pool__Zero_Amount();
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
         if (amountOut == 0) revert Pool__Zero_Amount();
+        if (amountOut < minAmountOut) revert Pool__Slippage_Exceeded();
         if (tokenIn != address(0)) {
             if (msg.value > 0) revert Pool__Amount_Mismatch();
             _pull(tokenIn, _msgsender(), cacheAmountIn);
@@ -41,16 +42,17 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         emit Swapped(_msgsender(), tokenIn, tokenOut, cacheAmountIn, amountOut);
     }
 
-    function swapExactOutput(address tokenIn, address tokenOut, uint256 amountOut)
-        external
-        payable
-        nonReentrant
-        returns (uint256 amountIn)
-    {
+    function swapExactOutput(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountOut,
+        uint256 maxAmountIn
+    ) external payable nonReentrant returns (uint256 amountIn) {
         uint256 cacheAmountOut = amountOut == 0 ? msg.value : amountOut;
         if (cacheAmountOut == 0) revert Pool__Zero_Amount();
         amountIn = _exactAmountIn(tokenIn, tokenOut, cacheAmountOut);
         if (amountIn == 0) revert Pool__Zero_Amount();
+        if (amountIn > maxAmountIn) revert Pool__Slippage_Exceeded();
         if (tokenIn != address(0)) {
             if (msg.value > 0) revert Pool__Amount_Mismatch();
             _pull(tokenIn, _msgsender(), amountIn);

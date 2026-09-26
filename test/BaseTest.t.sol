@@ -41,7 +41,7 @@ abstract contract BaseTest is Test {
     address internal multisig = makeAddr("multisig");
     address internal deployer = makeAddr("deployer");
     address internal charles = makeAddr("Charles");
-    address internal thelma = makeAddr("Thelma"); // 1000000000000000000000
+    address internal thelma = makeAddr("Thelma");
 
     // NGNS/USDC price scaled to 18 decimals (0.00084 USDC per NGNS -> 8.4e14)
     uint256 internal constant INITIAL_PRICE = 840000000000000;
@@ -75,10 +75,19 @@ abstract contract BaseTest is Test {
         ngns.mint(deployer, 500_000_000_000 * 1e18);
 
         usdc.mint(charles, 100_000 * 1e6);
+        usdc.mint(thelma, 100_000 * 1e6);
         ngns.mint(charles, 100_000 * 1e18);
 
         // 5. Set Initial Pool Liquidity & Price
         _changePrank(deployer);
+        usdc.approve(address(pool), type(uint256).max);
+        ngns.approve(address(pool), type(uint256).max);
+
+        _changePrank(charles);
+        usdc.approve(address(pool), type(uint256).max);
+        ngns.approve(address(pool), type(uint256).max);
+
+        _changePrank(thelma);
         usdc.approve(address(pool), type(uint256).max);
         ngns.approve(address(pool), type(uint256).max);
         _stopPrank();
@@ -97,7 +106,6 @@ abstract contract BaseTest is Test {
             true,
             true
         );
-
         Pool.Inventory memory inv = pool.getInventory(address(ngns), address(usdc));
         console2.log("--- Inventory Details ---");
         console2.log("Asset Out: ", inv.assetOut);
