@@ -32,17 +32,16 @@ abstract contract BaseTest is Test {
 
     MockERC20 internal usdc; // 6 decimals
     MockERC20 internal ngns; // 18 decimals
-    MockNGNOracle internal usdNgnFeed;
+    MockNGNOracle internal ngnUsdFeed;
     MockV3Aggregator internal usdcUsdFeed;
-    uint256 internal initialUsdNgnPrice = 84000;
+    uint256 internal initialNgnUsdPrice = 84000; // 0.00084 USD per NGN (8 DECIMAL)
     uint256 internal initialUsdcUsdPrice = 1e8;
     uint256 internal acquisitionPrice = 1000e18; // got 1 USD for 1000 NGN
     uint256 internal spreadBps = 1000; // 10%
-
     address internal multisig = makeAddr("multisig");
     address internal deployer = makeAddr("deployer");
     address internal charles = makeAddr("Charles");
-    address internal thelma = makeAddr("Thelma");
+    address internal thelma = makeAddr("Thelma"); // 1000000000000000000000
 
     // NGNS/USDC price scaled to 18 decimals (0.00084 USDC per NGNS -> 8.4e14)
     uint256 internal constant INITIAL_PRICE = 840000000000000;
@@ -51,15 +50,15 @@ abstract contract BaseTest is Test {
         // 1. Deploy Mock Tokens
         usdc = new MockERC20("USD Coin", "USDC", 6);
         ngns = new MockERC20("Naira Stable", "NGNS", 18);
-        usdNgnFeed = new MockNGNOracle(initialUsdNgnPrice);
-        (uint256 p,) = usdNgnFeed.getUsdPricePerNgn();
-        assertEq(p, initialUsdNgnPrice);
+        ngnUsdFeed = new MockNGNOracle(initialNgnUsdPrice);
+        (uint256 p,) = ngnUsdFeed.getUsdPricePerNgn();
+        assertEq(p, initialNgnUsdPrice);
         usdcUsdFeed = new MockV3Aggregator(8, int256(initialUsdcUsdPrice));
 
         // 2. Deploy Factory & Base Implementation
         _changePrank(multisig);
         poolImpl = new Pool();
-        factory = new PoolFactory(multisig, address(usdNgnFeed), address(poolImpl));
+        factory = new PoolFactory(multisig, address(ngnUsdFeed), address(poolImpl));
 
         // 3. Deploy Proxy Pool via Factory
         _changePrank(deployer);
@@ -91,7 +90,7 @@ abstract contract BaseTest is Test {
         pool.deployInv(
             address(usdc),
             address(ngns),
-            address(usdNgnFeed),
+            address(ngnUsdFeed),
             acquisitionPrice,
             spreadBps,
             depositAmount,

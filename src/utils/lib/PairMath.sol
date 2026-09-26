@@ -22,6 +22,26 @@ library PairMath {
         }
     }
 
+    function _amountOutInverted(uint256 amountIn, uint256 precision, uint256 price)
+        internal
+        pure
+        returns (uint256)
+    {
+        unchecked {
+            return (amountIn * price) / precision;
+        }
+    }
+
+    function _amountInInverted(uint256 amountOut, uint256 precision, uint256 price)
+        internal
+        pure
+        returns (uint256)
+    {
+        unchecked {
+            return (amountOut * precision) / price;
+        }
+    }
+
     function _delta(uint256 decimalsIn, uint256 decimalsOut) internal pure returns (uint256) {
         unchecked {
             return decimalsIn > decimalsOut ? decimalsIn - decimalsOut : decimalsOut - decimalsIn;

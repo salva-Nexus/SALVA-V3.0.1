@@ -9,9 +9,10 @@ import {
 import { INGNOracle } from "./interfaces/INGNOracle.sol";
 
 abstract contract Oracle is View {
-    function oraclePrice(address feed, bool isInverted) public view returns (uint256 price) {
+    function oraclePrice(address feed, bool isInverted) public view returns (uint256) {
         (uint256 rawPrice, uint256 decimals) = _stalenessCheck(feed);
-        price = !isInverted
+        if (rawPrice <= 0) return 0;
+        return !isInverted
             ? (rawPrice * PRECISION) / (10 ** decimals)
             : (10 ** decimals * PRECISION) / rawPrice;
     }
@@ -22,7 +23,7 @@ abstract contract Oracle is View {
             (uint256 usdPricePerNgn, uint256 updatedAtForNgn) = INGNOracle(feed).getUsdPricePerNgn();
             decimals = INGNOracle(feed).decimals();
             if (block.timestamp - updatedAtForNgn > STALE_PRICE_THRESHOLD) {
-                revert Pool__Stale_Price();
+                return (0, 0);
             }
             if (usdPricePerNgn == 0) revert Pool__Zero_Price();
             return (usdPricePerNgn, uint256(decimals));
@@ -31,20 +32,10 @@ abstract contract Oracle is View {
             AggregatorV3Interface(feed).latestRoundData();
 
         decimals = AggregatorV3Interface(feed).decimals();
-
-        if (block.timestamp - updatedAt > STALE_PRICE_THRESHOLD) {
-            revert Pool__Stale_Price();
-        }
-        if (answeredInRound < roundId) {
-            revert Pool__Stale_Price();
-        }
-        if (roundId == 0) {
-            revert Pool__Invalid_Round();
-        }
-        if (answer <= 0) {
-            revert Pool__Zero_Price();
-        }
-
+        if (block.timestamp - updatedAt > STALE_PRICE_THRESHOLD) return (0, 0);
+        if (answeredInRound < roundId) return (0, 0);
+        if (roundId == 0) return (0, 0);
+        if (answer <= 0) return (0, 0);
         return (uint256(answer), uint256(decimals));
     }
 }
