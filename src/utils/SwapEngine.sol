@@ -16,7 +16,7 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         if (inv.feed == address(0)) return 0;
         uint256 oracle = oraclePrice(inv.feed, inv.isInverted);
         uint256 target = uint256(inv.floor) + (uint256(inv.floor) * inv.spreadBps) / SPREAD_BPS;
-        if (oracle <= target) {
+        if (oracle < target) {
             return inv.allowSwapBelowFloor ? target : 0;
         }
         return oracle;
