@@ -4,49 +4,83 @@ pragma solidity ^0.8.30;
 import { SwapEngine } from "./utils/SwapEngine.sol";
 
 contract Pool is SwapEngine {
-    function initialize(address _deployer) external onlyUninitialized {
+    function initialize(address _deployer, address _ngnFeed) external onlyUninitialized {
         deployer = _deployer;
+        ngnPriceFeed = _ngnFeed;
         initialized = true;
     }
 
-    function provideLiquidity(address asset, uint256 amount) external onlyDeployer returns (bool) {
-        // Transfer assets from the LP's wallet to this pool contract
-        _pull(asset, _msgsender(), amount);
-        emit LiquidityAdded(asset, amount);
+    function deployInv(
+        address _assetIn,
+        address _assetOut,
+        address _feed,
+        uint256 _floor,
+        uint256 _spread,
+        uint256 _amount,
+        bool _allowSwapBelowFloor,
+        bool _isInverted
+    ) external onlyDeployer returns (bool) {
+        _pull(_assetOut, _msgsender(), _amount);
+
+        Inventory memory inv = Inventory({
+            assetOut: _assetOut,
+            floor: uint96(_floor),
+            assetIn: _assetIn,
+            spreadBps: uint96(_spread),
+            feed: _feed,
+            allowSwapBelowFloor: _allowSwapBelowFloor,
+            isInverted: _isInverted
+        });
+
+        _updateInv(inv);
+
+        emit InventoryAdded(_assetOut, _assetIn, _feed, _floor, _spread, _amount);
+
+        return true;
+    }
+
+    function deployInvETH(
+        address _assetIn,
+        address _feed,
+        uint256 _floor,
+        uint256 _spread,
+        bool _allowSwapBelowFloor,
+        bool _isInverted
+    ) external payable onlyDeployer returns (bool) {
+        if (msg.value == 0) revert Pool__Zero_Amount();
+
+        Inventory memory inv = Inventory({
+            assetOut: address(0),
+            floor: uint96(_floor),
+            assetIn: _assetIn,
+            spreadBps: uint96(_spread),
+            feed: _feed,
+            allowSwapBelowFloor: _allowSwapBelowFloor,
+            isInverted: _isInverted
+        });
+
+        _updateInv(inv);
+
+        emit InventoryAdded(address(0), _assetIn, _feed, _floor, _spread, msg.value);
 
         return true;
     }
 
     function removeLiquidity(address asset, uint256 amount) external onlyDeployer returns (bool) {
-        // Transfer assets from the pool contract back to the LP's wallet
+        if (amount == 0) revert Pool__Zero_Amount();
+
         _push(asset, _msgsender(), amount);
         emit LiquidityRemoved(asset, amount);
+
         return true;
     }
 
-    function provideLiquidityETH() external payable onlyDeployer returns (bool) {
-        if (msg.value == 0) revert Pool__Zero_Amount();
-        emit LiquidityAdded(address(0), msg.value);
-        return true;
-    }
-
-    /// @notice Withdraw native ETH liquidity back to LP
     function removeLiquidityETH(uint256 amount) external onlyDeployer returns (bool) {
         if (amount == 0) revert Pool__Zero_Amount();
+
         _push(address(0), _msgsender(), amount);
         emit LiquidityRemoved(address(0), amount);
-        return true;
-    }
 
-    // Quote for base must be scaled to 18 decimals
-    function updatePrice(address _baseAsset, address _quoteAsset, uint256 _quoteForBase)
-        external
-        onlyDeployer
-        returns (bool)
-    {
-        if (_quoteForBase == 0) revert Pool__Zero_Price();
-        _updatePrice(_baseAsset, _quoteAsset, _quoteForBase);
-        emit PriceUpdated(_baseAsset, _quoteAsset, _quoteForBase);
         return true;
     }
 

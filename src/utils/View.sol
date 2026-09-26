@@ -7,8 +7,18 @@ import { Errors } from "./Errors.sol";
 import { TokenGateway } from "./TokenGateway.sol";
 
 abstract contract View is Storage, Errors, TokenGateway {
+    function _getPrice(address _base, address _quote) internal view virtual returns (uint256);
+
     function getPrice(address _base, address _quote) external view returns (uint256) {
         return _getPrice(_base, _quote);
+    }
+
+    function getInventory(address _base, address _quote)
+        public
+        view
+        returns (Inventory memory inv)
+    {
+        inv = _getInv(_base, _quote);
     }
 
     function availableLiquidity(address asset) external view returns (uint256) {

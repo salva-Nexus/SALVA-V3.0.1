@@ -2,10 +2,26 @@
 pragma solidity ^0.8.30;
 
 import { Modifier } from "./Modifier.sol";
-import { View } from "./View.sol";
 import { Events } from "./Events.sol";
+import { Oracle } from "../Oracle.sol";
 
-abstract contract SwapEngine is Modifier, View, Events {
+abstract contract SwapEngine is Modifier, Oracle, Events {
+    function _getPrice(address _base, address _quote)
+        internal
+        view
+        override
+        returns (uint256 price)
+    {
+        Inventory memory inv = _getInv(_base, _quote);
+        if (inv.feed == address(0)) return 0;
+        uint256 oracle = oraclePrice(inv.feed, inv.isInverted);
+        uint256 target = uint256(inv.floor) + (uint256(inv.floor) * inv.spreadBps) / SPREAD_BPS;
+        if (oracle <= target) {
+            return inv.allowSwapBelowFloor ? target : 0;
+        }
+        return oracle;
+    }
+
     function swapExactInput(address tokenIn, address tokenOut, uint256 amountIn)
         external
         payable

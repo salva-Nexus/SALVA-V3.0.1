@@ -9,7 +9,8 @@ abstract contract Modifier is Context, Storage, Errors {
     modifier nonReentrant() {
         assembly {
             if gt(tload(0x00), 0x00) {
-                revert(0x00, 0x00)
+                mstore(0x00, 0x146a9c57) // Pool__Reentrancy()
+                revert(0x00, 0x04)
             }
             tstore(0x00, 0x01)
         }

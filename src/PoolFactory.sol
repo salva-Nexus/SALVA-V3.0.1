@@ -10,6 +10,7 @@ contract PoolFactory is Context {
 
     address public baseImplementation;
     address public multisig;
+    address public ngnPriceFeed;
 
     event BaseImplementationUpdated(address indexed newImpl);
     event PoolCreated(address indexed poolAddress);
@@ -18,12 +19,14 @@ contract PoolFactory is Context {
     error Factory__Unauthorized();
     error Factory__PoolInitializationFailed();
 
-    constructor(address _multisig, address _baseImplementation) {
-        if (_multisig == address(0) || _baseImplementation == address(0)) {
+    constructor(address _multisig, address _ngnFeed, address _baseImplementation) {
+        if (_multisig == address(0) || _baseImplementation == address(0) || _ngnFeed == address(0))
+        {
             revert Factory__ZeroAddress();
         }
         baseImplementation = _baseImplementation;
         multisig = _multisig;
+        ngnPriceFeed = _ngnFeed;
     }
 
     function setBaseImpl(address _newImplementation) external {
@@ -36,11 +39,8 @@ contract PoolFactory is Context {
     function deployPool() external returns (address pool) {
         address impl = baseImplementation;
         if (impl == address(0)) revert Factory__ZeroAddress();
-
         pool = impl.clone();
-
-        IPool(pool).initialize(_msgsender());
-
+        IPool(pool).initialize(_msgsender(), ngnPriceFeed);
         emit PoolCreated(pool);
     }
 }
