@@ -5,14 +5,12 @@ import { View } from "./utils/View.sol";
 import {
     AggregatorV3Interface
 } from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import { console2 } from "forge-std/console2.sol";
 import { INGNOracle } from "./interfaces/INGNOracle.sol";
 
 abstract contract Oracle is View {
     function oraclePrice(address feed, bool isInverted) public view returns (uint256) {
         (uint256 rawPrice, uint256 decimals) = _stalenessCheck(feed);
         if (rawPrice <= 0) return 0;
-        console2.log("REAL", (rawPrice * PRECISION) / (10 ** decimals));
         return !isInverted
             ? (rawPrice * PRECISION) / (10 ** decimals)
             : (10 ** decimals * PRECISION) / rawPrice;

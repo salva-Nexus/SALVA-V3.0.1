@@ -5,7 +5,6 @@ import { PairMath } from "./lib/PairMath.sol";
 import { Storage } from "./Storage.sol";
 import { Errors } from "./Errors.sol";
 import { TokenGateway } from "./TokenGateway.sol";
-import { console2 } from "forge-std/console2.sol";
 
 abstract contract View is Storage, Errors, TokenGateway {
     function _getPrice(address _base, address _quote) internal view virtual returns (uint256);
@@ -45,7 +44,6 @@ abstract contract View is Storage, Errors, TokenGateway {
         uint256 decimalsOut = tokenOut == address(0) ? ETH_DECIMALS : _decimalsOf(tokenOut);
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
         uint256 rawAmountOut = PairMath._amountOut(amountIn, PRECISION, price);
-        console2.log(PairMath._scaleOutByDelta(decimalsIn, decimalsOut, rawAmountOut, delta));
         return delta == 0
             ? rawAmountOut
             : PairMath._scaleOutByDelta(decimalsIn, decimalsOut, rawAmountOut, delta);

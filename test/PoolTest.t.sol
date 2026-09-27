@@ -4,8 +4,9 @@ pragma solidity ^0.8.30;
 import { BaseTest } from "./BaseTest.t.sol";
 import { console2 } from "forge-std/console2.sol";
 import { Errors } from "../src/utils/Errors.sol";
+import { Pool } from "../src/Pool.sol";
 
-contract Pool is BaseTest {
+contract PoolTest is BaseTest {
     function test_Initialization() public view {
         assertEq(pool.VERSION(), "v3.0.1");
         assertEq(pool.deployer(), deployer);
@@ -243,6 +244,42 @@ contract Pool is BaseTest {
         _changePrank(charles);
         vm.expectRevert(Errors.Pool__Amount_Mismatch.selector);
         pool.swapExactInput{ value: 1 ether }(address(usdc), address(ngns), 100 * 1e6, 0);
+        _stopPrank();
+    }
+
+    function test_MsgValue_Reentrancy() public _deployInv {
+        uint256 ethIn = 1 ether;
+
+        _changePrank(deployer);
+        pool.deployInv(
+            address(0),
+            address(usdc),
+            address(ethUsdFeed),
+            5e14,
+            spreadBps,
+            1_000_000 * 1e6,
+            true,
+            true
+        );
+        _stopPrank();
+
+        _changePrank(charles);
+        uint256 quoted = pool.exactAmountOut(address(0), address(usdc), ethIn);
+        console2.log("QUOTE: ", quoted);
+
+        uint256 usdcBefore = usdc.balanceOf(charles);
+        console2.log("usdcBefore: ", usdcBefore);
+        uint256 ethBefore = address(pool).balance;
+        console2.log("ethBefore: ", ethBefore);
+        uint256 exQuote;
+        for (uint256 i = 0; i < 3; i++) {
+            exQuote += pool.swapExactInput{ value: ethIn }(address(0), address(usdc), 0, quoted);
+            console2.log("EX QUOTE: ", exQuote);
+        }
+        uint256 ethNow = address(pool).balance;
+        console2.log("ethNow: ", ethNow);
+        assertEq(usdc.balanceOf(charles), usdcBefore + exQuote);
+        assertEq(ethNow, 3 ether);
         _stopPrank();
     }
 }
