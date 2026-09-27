@@ -1,67 +1,18 @@
-## Foundry
+# Salva v3
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Salva v3 redesigns how trades and liquidity work across the platform to give merchants full pricing control while keeping network fees virtually zero.
 
-Foundry consists of:
+## What's New in v3
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **One Unified Swap Experience**
+  Replaces separate "Buy" and "Sell" tabs with a single, seamless trade route for any token pair.
 
-## Documentation
+- **Native ETH Support**
+  ETH is now a first-class asset across the platform — merchants can add or withdraw it directly as liquidity, and users can trade it directly, with no wrapping into another token required.
 
-https://book.getfoundry.sh/
+- **Live, Automatic Pricing**
+  Prices now update in real time from live market data feeds. Merchants no longer need to manually push price updates on-chain, removing the risk of a pair quoting a stale, out-of-date rate.
 
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- **Margin Floor Protection**
+  Merchants set a guaranteed floor rate and spread for each asset pair. If the live market rate ever dips to or below that floor, the pair either holds at the merchant's guaranteed rate or pauses trading entirely — whichever the merchant has configured — so a sudden market swing can never eat into their margin without their say-so.
 # SALVA-V3.0.1
