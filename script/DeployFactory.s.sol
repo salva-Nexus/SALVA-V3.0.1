@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.30;
 
 import { Script, console } from "forge-std/Script.sol";
 import { PoolFactory } from "../src/PoolFactory.sol";
 import { Pool } from "../src/Pool.sol";
+import { Addresses } from "./Addresses.s.sol";
 
-contract DeployFactoryScript is Script {
+contract DeployFactoryScript is Script, Addresses {
     function run() external {
-        address multisig = address(0x01);
-        address ngnPriceFeed = address(0x02);
+        address multisig = _multisig();
+        address ngnPriceFeed = _ngnOracle();
 
         vm.startBroadcast();
         Pool poolImplementation = new Pool();
