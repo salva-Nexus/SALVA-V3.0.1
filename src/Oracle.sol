@@ -8,7 +8,7 @@ import {
 import { INGNOracle } from "./interfaces/INGNOracle.sol";
 
 abstract contract Oracle is View {
-    function oraclePrice(address feed, bool isInverted) public view returns (uint256) {
+    function oraclePrice(address feed, bool isInverted) internal view returns (uint256) {
         (uint256 rawPrice, uint256 decimals) = _stalenessCheck(feed);
         if (rawPrice <= 0) return 0;
         return !isInverted

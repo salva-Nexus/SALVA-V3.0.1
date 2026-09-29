@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 abstract contract Context {
-    function _msgsender() public view returns (address) {
+    function _msgsender() internal view returns (address) {
         return msg.sender;
     }
 }

@@ -22,7 +22,7 @@ abstract contract View is Storage, Errors, TokenGateway {
     }
 
     function availableLiquidity(address asset) external view returns (uint256) {
-        return _balanceOf(asset, address(this));
+        return asset == address(0) ? address(this).balance : _balanceOf(asset, address(this));
     }
 
     function exactAmountOut(address tokenIn, address tokenOut, uint256 amountIn)

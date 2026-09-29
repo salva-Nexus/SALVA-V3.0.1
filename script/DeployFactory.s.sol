@@ -6,7 +6,7 @@ import { PoolFactory } from "../src/PoolFactory.sol";
 import { Pool } from "../src/Pool.sol";
 import { Addresses } from "./Addresses.s.sol";
 
-contract DeployFactoryScript is Script, Addresses {
+contract DeployFactory is Script, Addresses {
     function run() external {
         address multisig = _multisig();
         address ngnPriceFeed = _ngnOracle();
@@ -19,5 +19,8 @@ contract DeployFactoryScript is Script, Addresses {
         console.log("PoolFactory deployed at:", address(factory));
         console.log("-----------------------------------------");
         vm.stopBroadcast();
+
+        // BASE TESTNET => 0xe24CC0c10E226fc9d2ec1B338b36cD867a7bAACd
+        // BNB TESTNET => 0x3689459CB769140A7221b3299BD087fA7000D606
     }
 }
