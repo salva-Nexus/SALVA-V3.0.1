@@ -20,7 +20,7 @@ contract DeployFactory is Script, Addresses {
         console.log("-----------------------------------------");
         vm.stopBroadcast();
 
-        // BASE TESTNET => 0xe24CC0c10E226fc9d2ec1B338b36cD867a7bAACd
-        // BNB TESTNET => 0x3689459CB769140A7221b3299BD087fA7000D606
+        // BASE TESTNET => 0x30E58a3f4ed3968dd2181A472eD88AfdD8a688BF
+        // BNB TESTNET => 0xfcf3080E29b153db281F203F2aCB7Ea61dEf8eA3
     }
 }

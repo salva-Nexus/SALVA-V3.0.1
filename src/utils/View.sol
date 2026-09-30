@@ -7,9 +7,9 @@ import { Errors } from "./Errors.sol";
 import { TokenGateway } from "./TokenGateway.sol";
 
 abstract contract View is Storage, Errors, TokenGateway {
-    function _getPrice(address _base, address _quote) internal view virtual returns (uint256);
+    function _getPrice(address _base, address _quote) internal view virtual returns (uint256, bool);
 
-    function getPrice(address _base, address _quote) external view returns (uint256) {
+    function getPrice(address _base, address _quote) external view returns (uint256, bool) {
         return _getPrice(_base, _quote);
     }
 
@@ -38,8 +38,9 @@ abstract contract View is Storage, Errors, TokenGateway {
         view
         returns (uint256)
     {
-        uint256 price = _getPrice(tokenOut, tokenIn);
+        (uint256 price, bool allow) = _getPrice(tokenOut, tokenIn);
         if (price == 0) return 0;
+        if (!allow) return 0;
         uint256 decimalsIn = tokenIn == address(0) ? ETH_DECIMALS : _decimalsOf(tokenIn);
         uint256 decimalsOut = tokenOut == address(0) ? ETH_DECIMALS : _decimalsOf(tokenOut);
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);
@@ -62,8 +63,9 @@ abstract contract View is Storage, Errors, TokenGateway {
         view
         returns (uint256)
     {
-        uint256 price = _getPrice(tokenOut, tokenIn);
+        (uint256 price, bool allow) = _getPrice(tokenOut, tokenIn);
         if (price == 0) return 0;
+        if (!allow) return 0;
         uint256 decimalsIn = tokenIn == address(0) ? ETH_DECIMALS : _decimalsOf(tokenIn);
         uint256 decimalsOut = tokenOut == address(0) ? ETH_DECIMALS : _decimalsOf(tokenOut);
         uint256 delta = PairMath._delta(decimalsIn, decimalsOut);

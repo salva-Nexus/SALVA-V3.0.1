@@ -6,16 +6,17 @@ import { Events } from "./Events.sol";
 import { Oracle } from "../Oracle.sol";
 
 abstract contract SwapEngine is Modifier, Oracle, Events {
-    function _getPrice(address _base, address _quote) internal view override returns (uint256) {
+    function _getPrice(address _base, address _quote)
+        internal
+        view
+        override
+        returns (uint256, bool)
+    {
         Inventory memory inv = _getInv(_base, _quote);
-        if (inv.feed == address(0)) return 0;
+        if (inv.feed == address(0)) return (0, inv.allowSwapBelowFloor);
         uint256 oracle = oraclePrice(inv.feed, inv.isInverted);
-        uint256 target = uint256(inv.floor) + (uint256(inv.floor) * inv.spreadBps) / SPREAD_BPS;
-        if (oracle <= 0) return 0;
-        if (oracle < target) {
-            return inv.allowSwapBelowFloor ? target : 0;
-        }
-        return oracle;
+        if (oracle <= 0) return (0, inv.allowSwapBelowFloor);
+        return (oracle, inv.allowSwapBelowFloor);
     }
 
     function swapExactInput(

@@ -17,12 +17,6 @@ contract PoolTest is BaseTest {
         assertEq(pool.availableLiquidity(address(usdc)), 0);
     }
 
-    function test_GetPrice_WhenBelowFloor_Allowed() public _deployInv {
-        uint256 expectedTarget = acquisitionPrice + (acquisitionPrice * spreadBps) / 10_000;
-        uint256 price = pool.getPrice(address(ngns), address(usdc));
-        assertEq(price, expectedTarget);
-    }
-
     function test_SwapExactInput_Success() public _deployInv {
         uint256 swapAmountUSDC = 100 * 1e6;
         _changePrank(charles);
@@ -88,14 +82,13 @@ contract PoolTest is BaseTest {
             address(ngns),
             address(ngnUsdFeed),
             acquisitionPrice,
-            spreadBps,
             depositAmount,
             false,
             false
         );
         _stopPrank();
-        uint256 price = pool.getPrice(address(ngns), address(usdc));
-        assertEq(price, 0);
+        (, bool allow) = pool.getPrice(address(ngns), address(usdc));
+        assertFalse(allow);
 
         _changePrank(charles);
         vm.expectRevert(Errors.Pool__Zero_Amount.selector);
@@ -154,48 +147,10 @@ contract PoolTest is BaseTest {
         _stopPrank();
     }
 
-    function test_ExtremeSpreadBps_DoesNotOverflow() public {
-        _changePrank(deployer);
-        uint256 hugeSpread = 100_000; // 1000%
-        pool.deployInv(
-            address(usdc),
-            address(ngns),
-            address(ngnUsdFeed),
-            acquisitionPrice,
-            hugeSpread,
-            500_000 * 1e18,
-            true,
-            true
-        );
-        _stopPrank();
-        uint256 price = pool.getPrice(address(ngns), address(usdc));
-        console2.log("price with 1000% spread floor:", price);
-        assertTrue(price > 0);
-    }
-
-    function testFuzz_SpreadBps_NeverOverflowsPriceCalc(uint256 spread) public {
-        spread = bound(spread, 0, 1_000_000); // up to 10,000% just to stress it
-        _changePrank(deployer);
-        pool.deployInv(
-            address(usdc),
-            address(ngns),
-            address(ngnUsdFeed),
-            acquisitionPrice,
-            spread,
-            500_000 * 1e18,
-            true,
-            true
-        );
-        _stopPrank();
-
-        uint256 price = pool.getPrice(address(ngns), address(usdc));
-        assertLt(price, type(uint128).max, "possible overflow in floor*spreadBps calc");
-    }
-
     function test_DeployInvETH_And_SwapExactInput_WithETH() public {
         _changePrank(deployer);
-        pool.deployInvETH{ value: 10 ether }(
-            address(usdc), address(ethUsdFeed), 1800e18, spreadBps, true, false
+        pool.deployInv{ value: 10 ether }(
+            address(usdc), address(0), address(ethUsdFeed), 1800e18, 0, true, false
         );
         _stopPrank();
 
@@ -218,14 +173,7 @@ contract PoolTest is BaseTest {
 
         _changePrank(deployer);
         pool.deployInv(
-            address(0),
-            address(usdc),
-            address(ethUsdFeed),
-            5e14,
-            spreadBps,
-            1_000_000 * 1e6,
-            true,
-            true
+            address(0), address(usdc), address(ethUsdFeed), 5e14, 1_000_000 * 1e6, true, true
         );
         _stopPrank();
 

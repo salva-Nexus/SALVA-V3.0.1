@@ -15,71 +15,34 @@ contract Pool is SwapEngine {
         address _assetOut,
         address _feed,
         uint256 _floor,
-        uint256 _spread,
         uint256 _amount,
         bool _allowSwapBelowFloor,
         bool _isInverted
-    ) external onlyDeployer returns (bool) {
-        _pull(_assetOut, _msgsender(), _amount);
-
+    ) external payable onlyDeployer returns (bool) {
+        if (msg.value == 0 && _amount == 0) revert Pool__Zero_Amount();
+        if (_amount > 0 && msg.value > 0 || _amount > 0 && msg.value > 0) {
+            revert Pool__Amount_Mismatch();
+        }
+        if (_amount > 0) {
+            _pull(_assetOut, _msgsender(), _amount);
+        }
         Inventory memory inv = Inventory({
             assetOut: _assetOut,
             floor: uint96(_floor),
             assetIn: _assetIn,
-            spreadBps: uint96(_spread),
             feed: _feed,
             allowSwapBelowFloor: _allowSwapBelowFloor,
             isInverted: _isInverted
         });
-
         _updateInv(inv);
-
-        emit InventoryAdded(_assetOut, _assetIn, _feed, _floor, _spread, _amount);
-
-        return true;
-    }
-
-    function deployInvETH(
-        address _assetIn,
-        address _feed,
-        uint256 _floor,
-        uint256 _spread,
-        bool _allowSwapBelowFloor,
-        bool _isInverted
-    ) external payable onlyDeployer returns (bool) {
-        if (msg.value == 0) revert Pool__Zero_Amount();
-
-        Inventory memory inv = Inventory({
-            assetOut: address(0),
-            floor: uint96(_floor),
-            assetIn: _assetIn,
-            spreadBps: uint96(_spread),
-            feed: _feed,
-            allowSwapBelowFloor: _allowSwapBelowFloor,
-            isInverted: _isInverted
-        });
-
-        _updateInv(inv);
-
-        emit InventoryAdded(address(0), _assetIn, _feed, _floor, _spread, msg.value);
-
+        emit InventoryAdded(_assetOut, _assetIn, _feed, _floor, _amount);
         return true;
     }
 
     function removeLiquidity(address asset, uint256 amount) external onlyDeployer returns (bool) {
         if (amount == 0) revert Pool__Zero_Amount();
-
         _push(asset, _msgsender(), amount);
         emit LiquidityRemoved(asset, amount);
-
-        return true;
-    }
-
-    function removeLiquidityETH(uint256 amount) external onlyDeployer returns (bool) {
-        if (amount == 0) revert Pool__Zero_Amount();
-
-        _push(address(0), _msgsender(), amount);
-        emit LiquidityRemoved(address(0), amount);
 
         return true;
     }

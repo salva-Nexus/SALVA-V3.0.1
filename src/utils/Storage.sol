@@ -9,15 +9,13 @@ abstract contract Storage {
     uint256 internal constant PRECISION = 10 ** 18;
     uint256 internal constant ETH_DECIMALS = 18;
     uint256 internal constant STALE_PRICE_THRESHOLD = 3 hours;
-    uint256 internal constant SPREAD_BPS = 10_000;
 
     struct Inventory {
         address assetOut;
         uint96 floor;
         address assetIn;
-        uint96 spreadBps;
-        address feed;
         bool allowSwapBelowFloor;
+        address feed;
         bool isInverted;
     }
 
@@ -35,15 +33,14 @@ abstract contract Storage {
         address assetOut = _inv.assetOut;
         uint256 floor = _inv.floor;
         address assetIn = _inv.assetIn;
-        uint256 spreadBps = _inv.spreadBps;
-        address feed = _inv.feed;
         bool allowSwapBelowFloor = _inv.allowSwapBelowFloor;
+        address feed = _inv.feed;
         bool isInverted = _inv.isInverted;
 
         assembly ("memory-safe") {
             sstore(k, or(shl(0x60, assetOut), floor))
-            sstore(add(k, 1), or(shl(0x60, assetIn), spreadBps))
-            sstore(add(k, 2), or(or(shl(0x60, feed), shl(0x08, allowSwapBelowFloor)), isInverted))
+            sstore(add(k, 1), or(shl(0x60, assetIn), allowSwapBelowFloor))
+            sstore(add(k, 2), or(shl(0x60, feed), isInverted))
         }
     }
 
@@ -53,9 +50,8 @@ abstract contract Storage {
         address _assetOut;
         uint96 _floor;
         address _assetIn;
-        uint96 _spreadBps;
-        address _feed;
         bool _allowSwapBelowFloor;
+        address _feed;
         bool _isInverted;
 
         assembly ("memory-safe") {
@@ -66,9 +62,8 @@ abstract contract Storage {
             _assetOut := shr(0x60, slot0)
             _floor := and(slot0, 0xffffffffffffffffffffffffffff)
             _assetIn := shr(0x60, slot1)
-            _spreadBps := and(slot1, 0xffffffffffffffffffffffffffff)
+            _allowSwapBelowFloor := and(slot1, 0xff)
             _feed := shr(0x60, slot2)
-            _allowSwapBelowFloor := and(shr(0x08, slot2), 0xff)
             _isInverted := and(slot2, 0xff)
         }
 
@@ -76,9 +71,8 @@ abstract contract Storage {
             assetOut: _assetOut,
             floor: _floor,
             assetIn: _assetIn,
-            spreadBps: _spreadBps,
-            feed: _feed,
             allowSwapBelowFloor: _allowSwapBelowFloor,
+            feed: _feed,
             isInverted: _isInverted
         });
     }

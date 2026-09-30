@@ -38,7 +38,6 @@ abstract contract BaseTest is Test {
     uint256 internal initialNgnUsdPrice = 84000; // 0.00084 USD per NGN (8 DECIMAL)
     uint256 internal initialUsdcUsdPrice = 1e8;
     uint256 internal acquisitionPrice = 9e14; // got 1 NGN for 0.0009 NGN
-    uint256 internal spreadBps = 1000; // 10%
     address internal multisig = makeAddr("multisig");
     address internal deployer = makeAddr("deployer");
     address internal charles = makeAddr("Charles");
@@ -103,7 +102,6 @@ abstract contract BaseTest is Test {
             address(ngns),
             address(ngnUsdFeed),
             acquisitionPrice,
-            spreadBps,
             depositAmount,
             true,
             false
@@ -113,7 +111,6 @@ abstract contract BaseTest is Test {
         console2.log("Asset Out: ", inv.assetOut);
         console2.log("Floor: ", inv.floor);
         console2.log("Asset In: ", inv.assetIn);
-        console2.log("Spread Bps: ", inv.spreadBps);
         console2.log("Feed: ", inv.feed);
         console2.log("Allow Swap Below Floor: ", inv.allowSwapBelowFloor);
         console2.log("Is Inverted: ", inv.isInverted);

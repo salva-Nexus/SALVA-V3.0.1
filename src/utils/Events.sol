@@ -14,7 +14,6 @@ abstract contract Events {
         address indexed quote,
         address indexed feed,
         uint256 floor,
-        uint256 spread,
         uint256 amount
     );
     event LiquidityRemoved(address indexed asset, uint256 amount);
