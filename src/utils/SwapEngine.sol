@@ -14,7 +14,11 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
     {
         Inventory memory inv = _getInv(_base, _quote);
         if (inv.feed == address(0)) return (0, inv.allowSwapBelowFloor);
-        uint256 oracle = oraclePrice(inv.feed, inv.isInverted);
+        uint256 oracle = oraclePrice(
+            inv.feed == ngnPriceFeed ? inv.isInverted ? inv.assetOut : inv.assetIn : address(0),
+            inv.feed,
+            inv.isInverted
+        );
         if (oracle <= 0) return (0, inv.allowSwapBelowFloor);
         return (oracle, inv.allowSwapBelowFloor);
     }

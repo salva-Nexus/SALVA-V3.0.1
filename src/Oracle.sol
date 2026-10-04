@@ -8,24 +8,29 @@ import {
 import { INGNOracle } from "./interfaces/INGNOracle.sol";
 
 abstract contract Oracle is View {
-    function oraclePrice(address feed, bool isInverted) internal view returns (uint256) {
-        (uint256 rawPrice, uint256 decimals) = _stalenessCheck(feed);
+    function oraclePrice(address quote, address feed, bool isInverted)
+        internal
+        view
+        returns (uint256)
+    {
+        (uint256 rawPrice, uint256 decimals) = _stalenessCheck(feed, quote);
         if (rawPrice <= 0) return 0;
         return !isInverted
             ? (rawPrice * PRECISION) / (10 ** decimals)
             : (10 ** decimals * PRECISION) / rawPrice;
     }
 
-    function _stalenessCheck(address feed) internal view returns (uint256, uint256) {
+    function _stalenessCheck(address feed, address asset) internal view returns (uint256, uint256) {
         uint8 decimals;
         if (feed == ngnPriceFeed) {
-            (uint256 usdPricePerNgn, uint256 updatedAtForNgn) = INGNOracle(feed).getUsdPricePerNgn();
+            (uint256 assetPricePerNgn, uint256 updatedAtForNgn) =
+                INGNOracle(feed).getAssetPricePerNgn(asset);
             decimals = INGNOracle(feed).decimals();
             if (block.timestamp - updatedAtForNgn > STALE_PRICE_THRESHOLD) {
                 return (0, 0);
             }
-            if (usdPricePerNgn == 0) revert Pool__Zero_Price();
-            return (usdPricePerNgn, uint256(decimals));
+            if (assetPricePerNgn == 0) revert Pool__Zero_Price();
+            return (assetPricePerNgn, uint256(decimals));
         }
         (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) =
             AggregatorV3Interface(feed).latestRoundData();

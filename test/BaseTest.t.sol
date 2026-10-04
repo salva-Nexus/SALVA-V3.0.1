@@ -35,7 +35,7 @@ abstract contract BaseTest is Test {
     MockNGNOracle internal ngnUsdFeed;
     MockV3Aggregator internal usdcUsdFeed;
     MockV3Aggregator internal ethUsdFeed;
-    uint256 internal initialNgnUsdPrice = 84000; // 0.00084 USD per NGN (8 DECIMAL)
+    uint256 internal initialNgnUsdPrice = 84e13; // 0.00084 USD per NGN (8 DECIMAL)
     uint256 internal initialUsdcUsdPrice = 1e8;
     uint256 internal acquisitionPrice = 9e14; // got 1 NGN for 0.0009 NGN
     address internal multisig = makeAddr("multisig");
@@ -52,9 +52,9 @@ abstract contract BaseTest is Test {
         ngns = new MockERC20("Naira Stable", "NGNS", 18);
         ngnUsdFeed = new MockNGNOracle(initialNgnUsdPrice);
         ethUsdFeed = new MockV3Aggregator(8, 2000e8);
-        (uint256 p,) = ngnUsdFeed.getUsdPricePerNgn();
-        assertEq(p, initialNgnUsdPrice);
+        ngnUsdFeed.setTokenUsdFeed(address(0), address(ethUsdFeed));
         usdcUsdFeed = new MockV3Aggregator(8, int256(initialUsdcUsdPrice));
+        ngnUsdFeed.setTokenUsdFeed(address(usdc), address(usdcUsdFeed));
 
         // 2. Deploy Factory & Base Implementation
         _changePrank(multisig);

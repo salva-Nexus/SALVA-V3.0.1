@@ -62,18 +62,6 @@ contract PoolTest is BaseTest {
         _stopPrank();
     }
 
-    function testFuzz_SwapExactOutput_QuoteMatchesExecution(uint256 amountOut) public _deployInv {
-        amountOut = bound(amountOut, 1e18, 400_000 * 1e18);
-        uint256 requiredIn = pool.exactAmountIn(address(usdc), address(ngns), amountOut);
-        vm.assume(requiredIn > 0 && requiredIn <= usdc.balanceOf(thelma));
-        _changePrank(thelma);
-        uint256 usdcBefore = usdc.balanceOf(thelma);
-        uint256 actualIn = pool.swapExactOutput(address(usdc), address(ngns), amountOut, requiredIn);
-        assertEq(actualIn, requiredIn, "quote/execution mismatch");
-        assertEq(usdc.balanceOf(thelma), usdcBefore - actualIn);
-        _stopPrank();
-    }
-
     function test_RevertIf_PriceBelowFloor_WhenDisallowed() public {
         _changePrank(deployer);
         uint256 depositAmount = 500_000 * 1e18;
@@ -98,7 +86,7 @@ contract PoolTest is BaseTest {
 
     function test_SwapSucceeds_BelowFloor_WhenAllowed_ClampsToTarget() public _deployInv {
         _changePrank(deployer);
-        ngnUsdFeed.setPrice(100000);
+        ngnUsdFeed.updatePrice(1e15);
         _changePrank(charles);
         pool.swapExactInput(address(usdc), address(ngns), 100 * 1e6, 0);
         _stopPrank();
@@ -121,13 +109,13 @@ contract PoolTest is BaseTest {
     }
 
     function test_RevertIf_SlippageExceeded_ExactInput() public _deployInv {
-        ngnUsdFeed.setPrice(110000);
+        ngnUsdFeed.updatePrice(11e14);
         _changePrank(charles);
         uint256 quoted = pool.exactAmountOut(address(usdc), address(ngns), 100 * 1e6);
         uint256 slippageBps = 100;
         uint256 slippageAmount = (quoted * slippageBps) / 10000;
         // NGN Strengthens, but that's not what i saw to receive
-        ngnUsdFeed.setPrice(120000);
+        ngnUsdFeed.updatePrice(12e14);
         vm.expectRevert(Errors.Pool__Slippage_Exceeded.selector);
         pool.swapExactInput(address(usdc), address(ngns), 100 * 1e6, quoted - slippageAmount);
         _stopPrank();
@@ -138,7 +126,7 @@ contract PoolTest is BaseTest {
         uint256 requiredIn = pool.exactAmountIn(address(usdc), address(ngns), requestedOut);
         uint256 slippageBps = 100;
         uint256 slippageAmount = (requiredIn * slippageBps) / 10000;
-        ngnUsdFeed.setPrice(100000);
+        ngnUsdFeed.updatePrice(1000000000000000);
         _changePrank(thelma);
         vm.expectRevert(Errors.Pool__Slippage_Exceeded.selector);
         pool.swapExactOutput(

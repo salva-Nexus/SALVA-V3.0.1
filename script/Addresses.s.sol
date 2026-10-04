@@ -29,11 +29,11 @@ abstract contract Addresses {
     function _ngnOracle() internal view returns (address) {
         if (block.chainid == BASE_MAINNET) return address(0x1234);
         if (block.chainid == BASE_SEPOLIA) {
-            return address(0x494ffe007C30e82438cFaBC0b218102207f7023a);
+            return address(0x6b51afD271bB46C8Ff068beAa511Fee5756Fcc66);
         }
         if (block.chainid == BNB_MAINNET) return address(0x1234);
         if (block.chainid == BNB_TESTNET) {
-            return address(0xe67f75e1B8643A3Ce2938E967bfaC0D8a5Cc72Bb);
+            return address(0x9066888C32Fa7807C796c183E868ADb3A27Aa6CF);
         }
         revert("Addresses: Unsupported Chain ID");
     }
