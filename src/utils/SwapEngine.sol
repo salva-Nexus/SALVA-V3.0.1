@@ -4,6 +4,7 @@ pragma solidity ^0.8.30;
 import { Modifier } from "./Modifier.sol";
 import { Events } from "./Events.sol";
 import { Oracle } from "../Oracle.sol";
+import { console2 } from "forge-std/console2.sol";
 
 abstract contract SwapEngine is Modifier, Oracle, Events {
     function _getPrice(address _base, address _quote)
@@ -20,7 +21,20 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
             inv.isInverted
         );
         if (oracle <= 0) return (0, inv.allowSwapBelowFloor);
-        return (oracle, inv.allowSwapBelowFloor);
+        // Calculate price based on merchants spread
+        uint256 price;
+        if (inv.spreadBps < 0) {
+            uint256 discountBps = uint256(uint96(-inv.spreadBps));
+            price = oracle - (oracle * discountBps / PERCENTAGE_BPS);
+        } else if (inv.spreadBps > 0) {
+            uint256 premiumBps = uint256(uint96(inv.spreadBps));
+            price = oracle + (oracle * premiumBps / PERCENTAGE_BPS);
+        } else {
+            price = oracle;
+        }
+        console2.log("ACTUAL PRICE: ", oracle);
+        console2.log("UPDATED PRICE: ", price);
+        return (price, inv.allowSwapBelowFloor);
     }
 
     function swapExactInput(

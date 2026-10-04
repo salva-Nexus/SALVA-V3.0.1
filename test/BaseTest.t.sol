@@ -38,6 +38,7 @@ abstract contract BaseTest is Test {
     uint256 internal initialNgnUsdPrice = 84e13; // 0.00084 USD per NGN (8 DECIMAL)
     uint256 internal initialUsdcUsdPrice = 1e8;
     uint256 internal acquisitionPrice = 9e14; // got 1 NGN for 0.0009 NGN
+    int96 internal spreadBps = 1000;
     address internal multisig = makeAddr("multisig");
     address internal deployer = makeAddr("deployer");
     address internal charles = makeAddr("Charles");
@@ -102,6 +103,7 @@ abstract contract BaseTest is Test {
             address(ngns),
             address(ngnUsdFeed),
             acquisitionPrice,
+            spreadBps,
             depositAmount,
             true,
             false

@@ -70,6 +70,7 @@ contract PoolTest is BaseTest {
             address(ngns),
             address(ngnUsdFeed),
             acquisitionPrice,
+            spreadBps,
             depositAmount,
             false,
             false
@@ -138,7 +139,7 @@ contract PoolTest is BaseTest {
     function test_DeployInvETH_And_SwapExactInput_WithETH() public {
         _changePrank(deployer);
         pool.deployInv{ value: 10 ether }(
-            address(usdc), address(0), address(ethUsdFeed), 1800e18, 0, true, false
+            address(usdc), address(0), address(ethUsdFeed), 1800e18, spreadBps, 0, true, false
         );
         _stopPrank();
 
@@ -161,7 +162,14 @@ contract PoolTest is BaseTest {
 
         _changePrank(deployer);
         pool.deployInv(
-            address(0), address(usdc), address(ethUsdFeed), 5e14, 1_000_000 * 1e6, true, true
+            address(0),
+            address(usdc),
+            address(ethUsdFeed),
+            5e14,
+            spreadBps,
+            1_000_000 * 1e6,
+            true,
+            true
         );
         _stopPrank();
 
@@ -180,6 +188,77 @@ contract PoolTest is BaseTest {
         _changePrank(charles);
         vm.expectRevert(Errors.Pool__Amount_Mismatch.selector);
         pool.swapExactInput{ value: 1 ether }(address(usdc), address(ngns), 100 * 1e6, 0);
+        _stopPrank();
+    }
+
+    function test_Spread_AppliesPremiumAndDiscount() public {
+        _changePrank(deployer);
+
+        // Baseline: no spread
+        pool.deployInv(
+            address(usdc),
+            address(ngns),
+            address(ngnUsdFeed),
+            acquisitionPrice,
+            0,
+            1e18,
+            true,
+            false
+        );
+        (uint256 basePrice,) = pool.getPrice(address(ngns), address(usdc));
+        assertGt(basePrice, 0, "oracle price should be non-zero");
+
+        // +10% premium (1000 bps) on the same pair
+        pool.deployInv(
+            address(usdc),
+            address(ngns),
+            address(ngnUsdFeed),
+            acquisitionPrice,
+            1000,
+            1e18,
+            true,
+            false
+        );
+        (uint256 premiumPrice,) = pool.getPrice(address(ngns), address(usdc));
+        assertEq(premiumPrice, basePrice + (basePrice * 1000) / 10_000, "premium mismatch");
+        assertGt(premiumPrice, basePrice);
+
+        // -5% discount (-500 bps)
+        pool.deployInv(
+            address(usdc),
+            address(ngns),
+            address(ngnUsdFeed),
+            acquisitionPrice,
+            -500,
+            1e18,
+            true,
+            false
+        );
+        (uint256 discountPrice,) = pool.getPrice(address(ngns), address(usdc));
+        assertEq(discountPrice, basePrice - (basePrice * 500) / 10_000, "discount mismatch");
+        assertLt(discountPrice, basePrice);
+
+        _stopPrank();
+    }
+
+    function test_UpdateSpread_ChangesPrice() public _deployInv {
+        (uint256 priceBefore,) = pool.getPrice(address(ngns), address(usdc));
+        assertGt(priceBefore, 0, "oracle price should be non-zero");
+        pool.updateSpread(address(ngns), address(usdc), -500);
+        (uint256 discounted,) = pool.getPrice(address(ngns), address(usdc));
+        assertLt(discounted, priceBefore, "discount should lower price");
+        pool.updateSpread(address(ngns), address(usdc), 0);
+        (uint256 raw,) = pool.getPrice(address(ngns), address(usdc));
+        assertEq(
+            priceBefore, raw + (raw * uint256(uint96(spreadBps))) / 10_000, "old premium mismatch"
+        );
+        assertEq(discounted, raw - (raw * 500) / 10_000, "discount mismatch");
+    }
+
+    function test_RevertIf_UpdateSpread_NotDeployer() public _deployInv {
+        _changePrank(charles);
+        vm.expectRevert();
+        pool.updateSpread(address(ngns), address(usdc), 500);
         _stopPrank();
     }
 }

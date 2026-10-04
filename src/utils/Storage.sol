@@ -9,15 +9,18 @@ abstract contract Storage {
     uint256 internal constant PRECISION = 10 ** 18;
     uint256 internal constant ETH_DECIMALS = 18;
     uint256 internal constant STALE_PRICE_THRESHOLD = 3 hours;
+    uint256 internal constant PERCENTAGE_BPS = 10_000;
 
     struct Inventory {
         address assetOut;
         uint96 floor;
         address assetIn;
-        bool allowSwapBelowFloor;
+        int96 spreadBps;
         address feed;
         bool isInverted;
+        bool allowSwapBelowFloor;
     }
+    mapping(bytes32 => Inventory) private inventories;
 
     function _keyPair(address _base, address _quote) internal pure returns (bytes32 k) {
         assembly ("memory-safe") {
@@ -30,50 +33,16 @@ abstract contract Storage {
 
     function _updateInv(Inventory memory _inv) internal {
         bytes32 k = _keyPair(_inv.assetOut, _inv.assetIn);
-        address assetOut = _inv.assetOut;
-        uint256 floor = _inv.floor;
-        address assetIn = _inv.assetIn;
-        bool allowSwapBelowFloor = _inv.allowSwapBelowFloor;
-        address feed = _inv.feed;
-        bool isInverted = _inv.isInverted;
-
-        assembly ("memory-safe") {
-            sstore(k, or(shl(0x60, assetOut), floor))
-            sstore(add(k, 1), or(shl(0x60, assetIn), allowSwapBelowFloor))
-            sstore(add(k, 2), or(shl(0x60, feed), isInverted))
-        }
+        inventories[k] = _inv;
     }
 
-    function _getInv(address _base, address _quote) internal view returns (Inventory memory inv) {
+    function _updateSpread(address _base, address _quote, int96 _spread) internal {
         bytes32 k = _keyPair(_base, _quote);
+        inventories[k].spreadBps = _spread;
+    }
 
-        address _assetOut;
-        uint96 _floor;
-        address _assetIn;
-        bool _allowSwapBelowFloor;
-        address _feed;
-        bool _isInverted;
-
-        assembly ("memory-safe") {
-            let slot0 := sload(k)
-            let slot1 := sload(add(k, 1))
-            let slot2 := sload(add(k, 2))
-
-            _assetOut := shr(0x60, slot0)
-            _floor := and(slot0, 0xffffffffffffffffffffffffffff)
-            _assetIn := shr(0x60, slot1)
-            _allowSwapBelowFloor := and(slot1, 0xff)
-            _feed := shr(0x60, slot2)
-            _isInverted := and(slot2, 0xff)
-        }
-
-        inv = Inventory({
-            assetOut: _assetOut,
-            floor: _floor,
-            assetIn: _assetIn,
-            allowSwapBelowFloor: _allowSwapBelowFloor,
-            feed: _feed,
-            isInverted: _isInverted
-        });
+    function _getInv(address _base, address _quote) internal view returns (Inventory memory) {
+        bytes32 k = _keyPair(_base, _quote);
+        return inventories[k];
     }
 }

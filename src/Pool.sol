@@ -15,6 +15,7 @@ contract Pool is SwapEngine {
         address _assetOut,
         address _feed,
         uint256 _floor,
+        int256 _spread,
         uint256 _amount,
         bool _allowSwapBelowFloor,
         bool _isInverted
@@ -30,6 +31,7 @@ contract Pool is SwapEngine {
             assetOut: _assetOut,
             floor: uint96(_floor),
             assetIn: _assetIn,
+            spreadBps: int96(_spread),
             feed: _feed,
             allowSwapBelowFloor: _allowSwapBelowFloor,
             isInverted: _isInverted
@@ -44,6 +46,15 @@ contract Pool is SwapEngine {
         _push(asset, _msgsender(), amount);
         emit LiquidityRemoved(asset, amount);
 
+        return true;
+    }
+
+    function updateSpread(address _base, address _quote, int96 _spread)
+        external
+        onlyDeployer
+        returns (bool)
+    {
+        _updateSpread(_base, _quote, _spread);
         return true;
     }
 

@@ -33,7 +33,19 @@ abstract contract Addresses {
         }
         if (block.chainid == BNB_MAINNET) return address(0x1234);
         if (block.chainid == BNB_TESTNET) {
-            return address(0x9066888C32Fa7807C796c183E868ADb3A27Aa6CF);
+            return address(0x3Ad5c68BF82bB402F81379124DCf513015CAafF1);
+        }
+        revert("Addresses: Unsupported Chain ID");
+    }
+
+    function _poolFactory() internal view returns (address) {
+        if (block.chainid == BASE_MAINNET) return address(0x1234);
+        if (block.chainid == BASE_SEPOLIA) {
+            return address(0x2b9Bb8e60f63B886545f9C6F14a697b9C6eE45a9);
+        }
+        if (block.chainid == BNB_MAINNET) return address(0x1234);
+        if (block.chainid == BNB_TESTNET) {
+            return address(0xd2611e3acE93303052478af5EE5d13e2E9c63C7A);
         }
         revert("Addresses: Unsupported Chain ID");
     }
