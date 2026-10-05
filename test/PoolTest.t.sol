@@ -69,14 +69,15 @@ contract PoolTest is BaseTest {
             address(usdc),
             address(ngns),
             address(ngnUsdFeed),
-            acquisitionPrice,
+            9000000000000000,
             spreadBps,
             depositAmount,
             false,
             false
         );
-        _stopPrank();
-        (, bool allow) = pool.getPrice(address(ngns), address(usdc));
+        _stopPrank(); // 90000000000000
+        (uint256 price, bool allow) = pool.getPrice(address(ngns), address(usdc));
+        console2.log(price, acquisitionPrice);
         assertFalse(allow);
 
         _changePrank(charles);

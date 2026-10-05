@@ -4,7 +4,6 @@ pragma solidity ^0.8.30;
 import { Modifier } from "./Modifier.sol";
 import { Events } from "./Events.sol";
 import { Oracle } from "../Oracle.sol";
-import { console2 } from "forge-std/console2.sol";
 
 abstract contract SwapEngine is Modifier, Oracle, Events {
     function _getPrice(address _base, address _quote)
@@ -32,9 +31,8 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         } else {
             price = oracle;
         }
-        console2.log("ACTUAL PRICE: ", oracle);
-        console2.log("UPDATED PRICE: ", price);
-        return (price, inv.allowSwapBelowFloor);
+        bool canSwap = inv.allowSwapBelowFloor ? true : price < inv.floor ? false : true;
+        return (price, canSwap);
     }
 
     function swapExactInput(
