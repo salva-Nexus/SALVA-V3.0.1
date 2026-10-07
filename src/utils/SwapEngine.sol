@@ -41,6 +41,7 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         uint256 amountIn,
         uint256 minAmountOut
     ) external payable returns (uint256 amountOut) {
+        if (amountIn > 0 && msg.value > 0) revert Pool__Amount_Mismatch();
         uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
         if (cacheAmountIn == 0) revert Pool__Zero_Amount();
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
@@ -64,9 +65,9 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         if (cacheAmountOut == 0) revert Pool__Zero_Amount();
         amountIn = _exactAmountIn(tokenIn, tokenOut, cacheAmountOut);
         if (amountIn == 0) revert Pool__Zero_Amount();
+        if (amountIn > 0 && msg.value > 0) revert Pool__Amount_Mismatch();
         if (amountIn > maxAmountIn) revert Pool__Slippage_Exceeded();
         if (tokenIn != address(0)) {
-            if (msg.value > 0) revert Pool__Amount_Mismatch();
             _pull(tokenIn, _msgsender(), amountIn);
         }
         _push(tokenOut, _msgsender(), cacheAmountOut);
