@@ -12,4 +12,6 @@ abstract contract Errors {
     error Pool__Invalid_Round();
     error Pool__Price_Below_Floor();
     error Pool__Slippage_Exceeded();
+    error Pool__Insufficient_ETH();
+    error Pool__Transfer_Failed();
 }

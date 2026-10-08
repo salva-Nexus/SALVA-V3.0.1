@@ -61,16 +61,26 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         uint256 amountOut,
         uint256 maxAmountIn
     ) external payable returns (uint256 amountIn) {
-        uint256 cacheAmountOut = amountOut == 0 ? msg.value : amountOut;
-        if (cacheAmountOut == 0) revert Pool__Zero_Amount();
-        amountIn = _exactAmountIn(tokenIn, tokenOut, cacheAmountOut);
+        if (amountOut == 0) revert Pool__Zero_Amount();
+        amountIn = _exactAmountIn(tokenIn, tokenOut, amountOut);
         if (amountIn == 0) revert Pool__Zero_Amount();
-        if (amountIn > 0 && msg.value > 0) revert Pool__Amount_Mismatch();
         if (amountIn > maxAmountIn) revert Pool__Slippage_Exceeded();
-        if (tokenIn != address(0)) {
+
+        if (tokenIn == address(0)) {
+            // Native ETH input: msg.value is the max budget sent by user
+            if (msg.value < amountIn) revert Pool__Insufficient_ETH();
+            _push(tokenOut, _msgsender(), amountOut);
+            // Refund excess ETH if msg.value was greater than exact amountIn
+            uint256 refund = msg.value - amountIn;
+            if (refund > 0) {
+                _push(tokenIn, _msgsender(), refund);
+            }
+        } else {
+            if (msg.value > 0) revert Pool__Amount_Mismatch();
             _pull(tokenIn, _msgsender(), amountIn);
+            _push(tokenOut, _msgsender(), amountOut);
         }
-        _push(tokenOut, _msgsender(), cacheAmountOut);
-        emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, cacheAmountOut);
+
+        emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, amountOut);
     }
 }
