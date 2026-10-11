@@ -17,6 +17,8 @@ abstract contract Storage {
         address assetIn;
         int96 spreadBps;
         address feed;
+        uint128 baseBalance;
+        uint128 quoteBalance;
         bool isInverted;
         bool allowSwapBelowFloor;
     }
@@ -39,6 +41,31 @@ abstract contract Storage {
     function _updateSpread(address _base, address _quote, int96 _spread) internal {
         bytes32 k = _keyPair(_base, _quote);
         inventories[k].spreadBps = _spread;
+    }
+
+    function _updateInLiquidity(address _base, address _quote, address _assetIn, uint128 _amountIn)
+        internal
+    {
+        bytes32 k = _keyPair(_base, _quote);
+        if (_assetIn == _base) {
+            inventories[k].baseBalance += _amountIn;
+        } else {
+            inventories[k].quoteBalance += _amountIn;
+        }
+    }
+
+    function _updateOutLiquidity(
+        address _base,
+        address _quote,
+        address _assetOut,
+        uint128 _amountOut
+    ) internal {
+        bytes32 k = _keyPair(_base, _quote);
+        if (_assetOut == _base) {
+            inventories[k].baseBalance -= _amountOut;
+        } else {
+            inventories[k].quoteBalance -= _amountOut;
+        }
     }
 
     function _getInv(address _base, address _quote) internal view returns (Inventory memory) {

@@ -16,6 +16,7 @@ abstract contract Events {
         uint256 floor,
         uint256 amount
     );
+    event LiquidityAdded(address indexed asset, uint256 amount);
     event LiquidityRemoved(address indexed asset, uint256 amount);
     event PriceUpdated(address indexed baseAsset, address indexed quoteAsset, uint256 price);
 }

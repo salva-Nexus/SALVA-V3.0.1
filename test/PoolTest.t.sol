@@ -143,6 +143,10 @@ contract PoolTest is BaseTest {
             address(usdc), address(0), address(ethUsdFeed), 1800e18, spreadBps, 0, true, false
         );
         _stopPrank();
+        Pool.Inventory memory inv = pool.getInventory(address(0), address(usdc));
+        console2.log("--- Inventory Details ---");
+        console2.log("Amount In: ", inv.baseBalance);
+        uint256 initAmount = inv.baseBalance;
 
         _changePrank(charles);
         uint256 quoted = pool.exactAmountOut(address(usdc), address(0), 2000e6);
@@ -155,6 +159,11 @@ contract PoolTest is BaseTest {
         console2.log("EX QUOTE: ", exQuote);
         assertEq(charles.balance, ethBefore + quoted);
         assertEq(usdc.balanceOf(charles), usdcBefore - 2000e6);
+
+        Pool.Inventory memory inv2 = pool.getInventory(address(0), address(usdc));
+        console2.log("--- Inventory Details ---");
+        console2.log("Amount In: ", inv2.baseBalance);
+        assertEq(uint256(inv2.baseBalance), uint256(initAmount) - quoted);
         _stopPrank();
     }
 
@@ -260,6 +269,50 @@ contract PoolTest is BaseTest {
         _changePrank(charles);
         vm.expectRevert();
         pool.updateSpread(address(ngns), address(usdc), 500);
+        _stopPrank();
+    }
+
+    function test_AddLiquidity_IncreasesBaseBalance() public _deployInv {
+        _changePrank(deployer);
+        uint256 addAmount = 100_000 * 1e18;
+        uint256 deployerBefore = ngns.balanceOf(deployer);
+        uint256 poolBefore = ngns.balanceOf(address(pool));
+        uint256 availableBefore = pool.availableLiquidity(address(ngns));
+        Pool.Inventory memory invBefore = pool.getInventory(address(ngns), address(usdc));
+
+        pool.addLiquidity(address(ngns), address(usdc), addAmount);
+
+        Pool.Inventory memory invAfter = pool.getInventory(address(ngns), address(usdc));
+        assertEq(ngns.balanceOf(deployer), deployerBefore - addAmount, "deployer balance");
+        assertEq(ngns.balanceOf(address(pool)), poolBefore + addAmount, "pool balance");
+        assertEq(pool.availableLiquidity(address(ngns)), availableBefore + addAmount, "available");
+        assertEq(
+            uint256(invAfter.baseBalance), uint256(invBefore.baseBalance) + addAmount, "baseBalance"
+        );
+        _stopPrank();
+    }
+
+    function test_RemoveLiquidity_DecreasesBaseBalance() public _deployInv {
+        _changePrank(deployer);
+        uint256 removeAmount = 200_000 * 1e18;
+        uint256 deployerBefore = ngns.balanceOf(deployer);
+        uint256 poolBefore = ngns.balanceOf(address(pool));
+        uint256 availableBefore = pool.availableLiquidity(address(ngns));
+        Pool.Inventory memory invBefore = pool.getInventory(address(ngns), address(usdc));
+
+        pool.removeLiquidity(address(ngns), address(usdc), address(ngns), removeAmount);
+
+        Pool.Inventory memory invAfter = pool.getInventory(address(ngns), address(usdc));
+        assertEq(ngns.balanceOf(deployer), deployerBefore + removeAmount, "deployer balance");
+        assertEq(ngns.balanceOf(address(pool)), poolBefore - removeAmount, "pool balance");
+        assertEq(
+            pool.availableLiquidity(address(ngns)), availableBefore - removeAmount, "available"
+        );
+        assertEq(
+            uint256(invAfter.baseBalance),
+            uint256(invBefore.baseBalance) - removeAmount,
+            "baseBalance"
+        );
         _stopPrank();
     }
 }

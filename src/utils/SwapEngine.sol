@@ -47,6 +47,8 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
         if (amountOut == 0) revert Pool__Zero_Amount();
         if (amountOut < minAmountOut) revert Pool__Slippage_Exceeded();
+        _updateInLiquidity(tokenOut, tokenIn, tokenIn, uint128(amountIn));
+        _updateOutLiquidity(tokenOut, tokenIn, tokenOut, uint128(amountOut));
         if (tokenIn != address(0)) {
             if (msg.value > 0) revert Pool__Amount_Mismatch();
             _pull(tokenIn, _msgsender(), cacheAmountIn);
@@ -65,12 +67,11 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         amountIn = _exactAmountIn(tokenIn, tokenOut, amountOut);
         if (amountIn == 0) revert Pool__Zero_Amount();
         if (amountIn > maxAmountIn) revert Pool__Slippage_Exceeded();
-
+        _updateInLiquidity(tokenOut, tokenIn, tokenIn, uint128(amountIn));
+        _updateOutLiquidity(tokenOut, tokenIn, tokenOut, uint128(amountOut));
         if (tokenIn == address(0)) {
-            // Native ETH input: msg.value is the max budget sent by user
             if (msg.value < amountIn) revert Pool__Insufficient_ETH();
             _push(tokenOut, _msgsender(), amountOut);
-            // Refund excess ETH if msg.value was greater than exact amountIn
             uint256 refund = msg.value - amountIn;
             if (refund > 0) {
                 _push(tokenIn, _msgsender(), refund);
@@ -80,7 +81,6 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
             _pull(tokenIn, _msgsender(), amountIn);
             _push(tokenOut, _msgsender(), amountOut);
         }
-
         emit Swapped(_msgsender(), tokenIn, tokenOut, amountIn, amountOut);
     }
 }

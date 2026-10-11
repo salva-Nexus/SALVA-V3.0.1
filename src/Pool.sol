@@ -20,12 +20,12 @@ contract Pool is SwapEngine {
         bool _allowSwapBelowFloor,
         bool _isInverted
     ) external payable onlyDeployer returns (bool) {
-        if (msg.value == 0 && _amount == 0) revert Pool__Zero_Amount();
-        if (_amount > 0 && msg.value > 0 || _amount > 0 && msg.value > 0) {
+        if (_amount > 0 && msg.value > 0) {
             revert Pool__Amount_Mismatch();
         }
-        if (_amount > 0) {
-            _pull(_assetOut, _msgsender(), _amount);
+        uint256 amount = _amount <= 0 ? msg.value : _amount;
+        if (_assetOut != address(0)) {
+            _pull(_assetOut, _msgsender(), amount);
         }
         Inventory memory inv = Inventory({
             assetOut: _assetOut,
@@ -33,19 +33,41 @@ contract Pool is SwapEngine {
             assetIn: _assetIn,
             spreadBps: int96(_spread),
             feed: _feed,
+            baseBalance: uint128(amount),
+            quoteBalance: 0,
             allowSwapBelowFloor: _allowSwapBelowFloor,
             isInverted: _isInverted
         });
         _updateInv(inv);
-        emit InventoryAdded(_assetOut, _assetIn, _feed, _floor, _amount);
+        emit InventoryAdded(_assetOut, _assetIn, _feed, _floor, amount);
         return true;
     }
 
-    function removeLiquidity(address asset, uint256 amount) external onlyDeployer returns (bool) {
-        if (amount == 0) revert Pool__Zero_Amount();
-        _push(asset, _msgsender(), amount);
-        emit LiquidityRemoved(asset, amount);
+    function removeLiquidity(address _base, address _quote, address _assetOut, uint256 _amount)
+        external
+        onlyDeployer
+        returns (bool)
+    {
+        if (_amount == 0) revert Pool__Zero_Amount();
+        _updateOutLiquidity(_base, _quote, _assetOut, uint128(_amount));
+        _push(_assetOut, _msgsender(), _amount);
+        emit LiquidityRemoved(_assetOut, _amount);
+        return true;
+    }
 
+    function addLiquidity(address _base, address _quote, uint256 _amount)
+        external
+        payable
+        onlyDeployer
+        returns (bool)
+    {
+        if (_amount > 0 && msg.value > 0) revert Pool__Amount_Mismatch();
+        uint256 depositAmount = _amount > 0 ? _amount : msg.value;
+        _updateInLiquidity(_base, _quote, _base, uint128(depositAmount));
+        if (_base != address(0)) {
+            _pull(_base, _msgsender(), depositAmount);
+        }
+        emit LiquidityAdded(_base, depositAmount);
         return true;
     }
 

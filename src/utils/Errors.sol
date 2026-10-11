@@ -14,4 +14,5 @@ abstract contract Errors {
     error Pool__Slippage_Exceeded();
     error Pool__Insufficient_ETH();
     error Pool__Transfer_Failed();
+    error Pool__Inventory_Not_Found();
 }
