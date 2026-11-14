@@ -235,6 +235,7 @@ contract PoolTest is BaseTest {
         assertGt(premiumPrice, basePrice);
         pool.removeLiquidity(address(ngns), address(usdc), address(ngns), 1e18);
 
+
         // -5% discount (-500 bps)
         pool.deployInv(
             address(usdc),
