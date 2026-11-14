@@ -217,6 +217,7 @@ contract PoolTest is BaseTest {
         );
         (uint256 basePrice,) = pool.getPrice(address(ngns), address(usdc));
         assertGt(basePrice, 0, "oracle price should be non-zero");
+        pool.removeLiquidity(address(ngns), address(usdc), address(ngns), 1e18);
 
         // +10% premium (1000 bps) on the same pair
         pool.deployInv(
@@ -232,6 +233,7 @@ contract PoolTest is BaseTest {
         (uint256 premiumPrice,) = pool.getPrice(address(ngns), address(usdc));
         assertEq(premiumPrice, basePrice + (basePrice * 1000) / 10_000, "premium mismatch");
         assertGt(premiumPrice, basePrice);
+        pool.removeLiquidity(address(ngns), address(usdc), address(ngns), 1e18);
 
         // -5% discount (-500 bps)
         pool.deployInv(

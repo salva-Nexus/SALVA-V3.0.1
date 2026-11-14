@@ -23,9 +23,9 @@ contract Pool is SwapEngine {
         if (_amount > 0 && msg.value > 0) {
             revert Pool__Amount_Mismatch();
         }
-        uint256 amount = _amount <= 0 ? msg.value : _amount;
+        uint128 amount = _assetOut == address(0) ? uint128(msg.value) : uint128(_amount);
         if (_assetOut != address(0)) {
-            _pull(_assetOut, _msgsender(), amount);
+            _pull(_assetOut, _msgsender(), _amount);
         }
         Inventory memory inv = Inventory({
             assetOut: _assetOut,
@@ -33,7 +33,7 @@ contract Pool is SwapEngine {
             assetIn: _assetIn,
             spreadBps: int96(_spread),
             feed: _feed,
-            baseBalance: uint128(amount),
+            baseBalance: amount,
             quoteBalance: 0,
             allowSwapBelowFloor: _allowSwapBelowFloor,
             isInverted: _isInverted

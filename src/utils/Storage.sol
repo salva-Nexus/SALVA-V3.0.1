@@ -10,6 +10,7 @@ abstract contract Storage {
     uint256 internal constant ETH_DECIMALS = 18;
     uint256 internal constant STALE_PRICE_THRESHOLD = 3 hours;
     uint256 internal constant PERCENTAGE_BPS = 10_000;
+    error Pool__Overwrite_Risk();
 
     struct Inventory {
         address assetOut;
@@ -35,6 +36,9 @@ abstract contract Storage {
 
     function _updateInv(Inventory memory _inv) internal {
         bytes32 k = _keyPair(_inv.assetOut, _inv.assetIn);
+        uint128 bBalance = inventories[k].baseBalance;
+        uint128 qBalance = inventories[k].quoteBalance;
+        if (bBalance > 0 || qBalance > 0) revert Pool__Overwrite_Risk();
         inventories[k] = _inv;
     }
 

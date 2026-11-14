@@ -42,12 +42,13 @@ abstract contract SwapEngine is Modifier, Oracle, Events {
         uint256 minAmountOut
     ) external payable returns (uint256 amountOut) {
         if (amountIn > 0 && msg.value > 0) revert Pool__Amount_Mismatch();
+        if (tokenIn == address(0) && msg.value <= 0) revert Pool__Insufficient_ETH();
         uint256 cacheAmountIn = amountIn == 0 ? msg.value : amountIn;
         if (cacheAmountIn == 0) revert Pool__Zero_Amount();
         amountOut = _exactAmountOut(tokenIn, tokenOut, cacheAmountIn);
         if (amountOut == 0) revert Pool__Zero_Amount();
         if (amountOut < minAmountOut) revert Pool__Slippage_Exceeded();
-        _updateInLiquidity(tokenOut, tokenIn, tokenIn, uint128(amountIn));
+        _updateInLiquidity(tokenOut, tokenIn, tokenIn, uint128(cacheAmountIn));
         _updateOutLiquidity(tokenOut, tokenIn, tokenOut, uint128(amountOut));
         if (tokenIn != address(0)) {
             if (msg.value > 0) revert Pool__Amount_Mismatch();
